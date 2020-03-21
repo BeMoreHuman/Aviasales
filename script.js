@@ -5,14 +5,16 @@ const formSearch = document.querySelector('.form-search'),
       dropdownCitiesFrom = document.querySelector('.dropdown__cities-from'),
       inputCitiesTo = document.querySelector('.input__cities-to'),
       dropdownCitiesTo = document.querySelector('.dropdown__cities-to'),
-      inputDateDepart = document.querySelector('.dropdown__date-depart');
+      inputDateDepart = document.querySelector('.input__date-depart');
 
 // Mock Data
 const API_KEY = '231f10a49992ec6c9c3a6a744446528e';
+// 'http://api.travelpayouts.com/data/ru/cities.json'
 const CITIES_API_URL = 'mock-data/cities.json';
 const PROXY = 'https://cors-anywhere.herokuapp.com/';
+const CALENDAR = 'http://min-prices.aviasales.ru/calendar_preload';
 let cities = [];
-
+ 
 function showCity(dropdown, input) {
   dropdown.textContent = '';
   if (input.value.trim().length < 3) {
@@ -36,8 +38,18 @@ function handlerCity(eventTarget, input, dropdown) {
   input.value = eventTarget.textContent;
   dropdown.textContent = '';
 }
-function asd() {
+function renderCheapestTickets(tickets) {
 
+}
+function renderTickets(tickets) {
+
+}
+function renderCheap(data, date) {
+  const cheapTickets = JSON.parse(data).best_prices;
+  const cheapTicketsDay = cheapTickets.filter(ticket => ticket.depart_date === date);
+
+  renderCheapestTickets(cheapTicketsDay);
+  renderTickets(cheapTickets);
 }
 function getData(url, callback) {
   const request = new XMLHttpRequest();
@@ -60,6 +72,8 @@ function getData(url, callback) {
   request.send();
 }
 
+// Events handlers
+
 inputCitiesFrom.addEventListener('input', () => {
   
   showCity(dropdownCitiesFrom, inputCitiesFrom);
@@ -80,6 +94,22 @@ dropdownCitiesTo.addEventListener('click', (event) => {
   handlerCity(event.target, inputCitiesTo, dropdownCitiesTo);
   
 });
+formSearch.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const formData = {
+    from: cities.find(item => item.name === inputCitiesFrom.value).code,
+    to: cities.find(item => item.name === inputCitiesTo.value).code,
+    when: inputDateDepart.value
+  };
+
+  const requestData = `?depart_date=${formData.when}&origin=${formData.from}&destination=${formData.to}&one_way=true&token=${API_KEY}`;
+
+  getData(CALENDAR + requestData, (response) => {
+    renderCheap(response, formData.when);
+  });
+  
+});
 
 
 
@@ -87,6 +117,5 @@ getData(CITIES_API_URL, (data) => {
   const dataCities = JSON.parse(data);
 
   cities = dataCities.filter(city => !!city.name);
-  
 });
 
